@@ -1,6 +1,8 @@
+import datetime
 import os
+import re
 import redis
-import sys
+import time
 from flask import Flask, request, render_template
 
 app = Flask(__name__)
@@ -14,7 +16,12 @@ db = redis.Redis(
 )
 
 def good_email(email):
-    return True
+    if not email:
+        return False
+    if re.match(r"^[A-Za-z0-9\.\+_-]+@[A-Za-z0-9\._-]+\.[a-zA-Z]*$", str(email)):
+        return True
+    else:
+        return False
 
 @app.route('/')
 def hello():
@@ -25,11 +32,14 @@ def hello():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    print("REQUEST RCVD:", str(request.form))
-    sys.stdout.flush()
-    if good_email(request.form):
-        return str(request.form['email'])
+    ts = time.time()
+    date = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+    email = request.form.get('email', None)
+    if good_email(email):
+        db.set('goodemail:' + str(email), date)
+        return str(email)
     else:
+        db.set('bademail:' + str(email), date)
         return "Bad haxxor!"
 
 if __name__ == '__main__':
