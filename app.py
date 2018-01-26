@@ -9,6 +9,7 @@ app = Flask(__name__)
 host = os.environ.get('REDIS_HOST')
 port = os.environ.get('REDIS_PORT')
 password = os.environ.get('REDIS_PW')
+pattern = re.compile(r"^([a-zA-Z0-9])(([\-.]|[_]+)?([a-zA-Z0-9]+))*(@){1}[a-z0-9]+[.]{1}(([a-z]{2,3})|([a-z]{2,3}[.]{1}[a-z]{2,3}))$")
 db = redis.Redis(
     host=host,
     port=port,
@@ -18,7 +19,7 @@ db = redis.Redis(
 def good_email(email):
     if not email:
         return False
-    if re.match(r"^[A-Za-z0-9\.\+_-]+@[A-Za-z0-9\._-]+\.[a-zA-Z]*$", str(email)):
+    if pattern.match(str(email)):
         return True
     else:
         return False
